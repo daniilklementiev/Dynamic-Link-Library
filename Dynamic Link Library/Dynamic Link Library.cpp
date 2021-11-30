@@ -2,11 +2,13 @@
 
 #include "framework.h"
 #include "resource.h"
+#include <string>
 
 #define MAX_LOADSTRING          100
 #define CMD_BUTTON_1            1001
 #define CMD_BUTTON_2            1002
 #define CMD_BUTTON_3            1003
+#define CMD_BUTTON_DEC          1004
 
 typedef long (*sqr_type)(long);   // sqr_type ~~ long (*)(long)  
 
@@ -20,6 +22,7 @@ WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 HWND static2;
 HWND edit;
+HWND list;
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -29,6 +32,7 @@ INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 void button1Click();
 void button2Click();
 void button3Click();
+void button4Click();
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -141,8 +145,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_CREATE:
         CreateWindowW(L"Button", L"Sqr", WS_CHILD | WS_VISIBLE, 10, 10, 75, 23, hWnd, (HMENU)CMD_BUTTON_1, hInst, NULL);
         CreateWindowW(L"Button", L"Cube", WS_CHILD | WS_VISIBLE, 95, 40, 75, 23, hWnd, (HMENU)CMD_BUTTON_2, hInst, NULL);
-        CreateWindowW(L"Button", L"Hex", WS_CHILD | WS_VISIBLE, 10, 150, 75, 23, hWnd, (HMENU)CMD_BUTTON_3, hInst, NULL);
+        CreateWindowW(L"Button", L"Hex", WS_CHILD | WS_VISIBLE, 10, 180, 75, 23, hWnd, (HMENU)CMD_BUTTON_3, hInst, NULL);
+        CreateWindowW(L"Button", L"Dec", WS_CHILD | WS_VISIBLE, 10, 210, 75, 23, hWnd, (HMENU)CMD_BUTTON_DEC, hInst, NULL);
+
         edit = CreateWindowW(L"EDIT", L"5", WS_CHILD | WS_VISIBLE, 10, 40, 75, 23, hWnd, NULL, hInst, NULL); 
+        list = CreateWindowW(L"Listbox", L"5", WS_CHILD | WS_VISIBLE, 10, 80, 400, 100, hWnd, NULL, hInst, NULL); 
         static2 = CreateWindowW(L"Static", L"Sqr", WS_CHILD | WS_VISIBLE, 180, 40, 150, 23, hWnd, 0, hInst, NULL);
         break;
     case WM_COMMAND:
@@ -160,9 +167,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             case CMD_BUTTON_3:
                 button3Click();
                 break;
-            /*case MB_OK:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, MB_OK);
-                break;*/
+            case CMD_BUTTON_DEC:
+                button4Click();
+                break;
 
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
@@ -255,20 +262,44 @@ void button2Click() {
 }
 
 void button3Click() {
-    HMODULE dll = LoadLibraryW(L"DLLCreate.dll");
-    if (dll == NULL) {
-        MessageBoxW(NULL, L"ERROR", L"DLL", MB_OK | MB_ICONERROR);
+
+    HMODULE dll = LoadLibraryW(L"DLLCreate");
+
+    int (*hex2dec)(const char*);
+    hex2dec = (int (*)(const char*))GetProcAddress(dll, "hex2dec");
+
+    if (hex2dec) {
+        char buff[100];
+        SendMessageA(edit, WM_GETTEXT, MAX_LOADSTRING, (LPARAM)buff);
+
+        _snprintf_s(buff, 100, 100, "%s to dec = %d", buff, hex2dec(buff));
+
+        SendMessageA(list, LB_ADDSTRING, MAX_LOADSTRING, (LPARAM)buff);
     }
     else {
-        hex_fun = (sqr_type)GetProcAddress(dll, "Hex");
-        if (hex_fun == NULL) {
-            MessageBoxW(NULL, L"ERROR", L"FUN", MB_OK | MB_ICONERROR);
-        }
-        else {
-            WCHAR str[100];
-            int x = 11;
-            _snwprintf_s(str, 50, L"Hex : %d - %d", x, hex_fun(x));
-            MessageBoxW(NULL, str, L"FUNC", MB_OK | MB_OK);
-        }
+
+        MessageBoxW(NULL, L"error", L"hex2dec", MB_OK | MB_ICONERROR);
+    }
+}
+
+void button4Click() {
+    HMODULE dll = LoadLibraryW(L"DLLCreate");
+
+    char* (*dec2hex)(int);
+    dec2hex = (char* (*)(int))GetProcAddress(dll, "dec2hex");
+
+    if (dec2hex) {
+        char buff[100];
+        SendMessageA(edit, WM_GETTEXT, MAX_LOADSTRING, (LPARAM)buff);
+        int param = atoi(buff);
+        char* res = dec2hex(param);
+        _snprintf_s(buff, 100, 100, "%d to hex = %s", param, res);
+        delete res;
+
+        SendMessageA(list, LB_ADDSTRING, MAX_LOADSTRING, (LPARAM)buff);
+    }
+    else {
+
+        MessageBoxW(NULL, L"error", L"dec2hex", MB_OK | MB_ICONERROR);
     }
 }
