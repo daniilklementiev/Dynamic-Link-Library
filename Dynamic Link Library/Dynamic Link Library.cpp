@@ -9,12 +9,15 @@
 #define CMD_BUTTON_2            1002
 #define CMD_BUTTON_3            1003
 #define CMD_BUTTON_DEC          1004
+#define CMD_BUTTON_DEC2         1005
 
-typedef long (*sqr_type)(long);   // sqr_type ~~ long (*)(long)  
+typedef long (*sqr_type)(long);   // sqr_type ~~ long (*)(long)
+
 
 sqr_type sqr_fun; // sqr_type sqr_fun == long (*sqr_fun)(long)
 sqr_type cube_fun;
 sqr_type hex_fun;
+sqr_type str_fun;
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
@@ -33,6 +36,7 @@ void button1Click();
 void button2Click();
 void button3Click();
 void button4Click();
+void button5Click();
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -147,6 +151,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         CreateWindowW(L"Button", L"Cube", WS_CHILD | WS_VISIBLE, 95, 40, 75, 23, hWnd, (HMENU)CMD_BUTTON_2, hInst, NULL);
         CreateWindowW(L"Button", L"Hex", WS_CHILD | WS_VISIBLE, 10, 180, 75, 23, hWnd, (HMENU)CMD_BUTTON_3, hInst, NULL);
         CreateWindowW(L"Button", L"Dec", WS_CHILD | WS_VISIBLE, 10, 210, 75, 23, hWnd, (HMENU)CMD_BUTTON_DEC, hInst, NULL);
+        CreateWindowW(L"Button", L"Dec2", WS_CHILD | WS_VISIBLE, 10, 240, 75, 23, hWnd, (HMENU)CMD_BUTTON_DEC2, hInst, NULL);
 
         edit = CreateWindowW(L"EDIT", L"5", WS_CHILD | WS_VISIBLE, 10, 40, 75, 23, hWnd, NULL, hInst, NULL); 
         list = CreateWindowW(L"Listbox", L"5", WS_CHILD | WS_VISIBLE, 10, 80, 400, 100, hWnd, NULL, hInst, NULL); 
@@ -170,7 +175,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             case CMD_BUTTON_DEC:
                 button4Click();
                 break;
-
+            case CMD_BUTTON_DEC2:
+                button5Click();
+                break;
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
                 break;
@@ -286,7 +293,7 @@ void button4Click() {
     HMODULE dll = LoadLibraryW(L"DLLCreate");
 
     char* (*dec2hex)(int);
-    dec2hex = (char* (*)(int))GetProcAddress(dll, "dec2hex");
+    dec2hex = (char*(*)(int))GetProcAddress(dll, "dec2hex");
 
     if (dec2hex) {
         char buff[100];
@@ -302,4 +309,22 @@ void button4Click() {
 
         MessageBoxW(NULL, L"error", L"dec2hex", MB_OK | MB_ICONERROR);
     }
+}
+
+void button5Click() {
+    HMODULE dll = LoadLibraryW(L"DLLCreate");
+    if (dll == NULL)
+    {
+        MessageBoxW(NULL, L"ERROR", L"FUN", MB_OK);
+    }
+    else {
+        void(*str_fun)(const char*, char*);
+        str_fun = 
+        GetProcAddress(dll, "dec2hex2");
+        char str[100];
+        str_fun("125", str);
+        MessageBoxA(NULL, str, "DEC2HEX", MB_OK | MB_ICONINFORMATION);
+    }
+    
+
 }

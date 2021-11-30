@@ -1,4 +1,5 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
+
 #include "pch.h"
 #include <windows.h>
 #include <stdlib.h>
@@ -29,6 +30,15 @@ extern "C"
         _itoa_s(dec, hex, 99, 16);
 
         return hex;
+    }
+
+    DLLEXPORT void dec2hex2(const char* dec, char* hex) {
+        _itoa(
+            atoi(dec),
+            hex,
+            16
+        );
+
     }
 }
 BOOL APIENTRY DllMain( HMODULE hModule,
